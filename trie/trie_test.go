@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The zkawa Authors.
+// Copyright (c) 2017, The gobasic Authors.
 // All rights reserved.
 //
 // Author: Zheng Gonglin <scaugrated@gmail.com>

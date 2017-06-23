@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The zkawa Authors.
+// Copyright (c) 2017, The gobasic Authors.
 // All rights reserved.
 //
 // Author: Zheng Gonglin <scaugrated@gmail.com>
@@ -12,9 +12,9 @@ import (
 )
 
 var (
-    errorKeyExisted = errors.New("key was existed")
-    errorKeyNotExisted = errors.New("key was not existed")
-    errorTrieSearchFailed = errors.New("search trie exception")
+    errorKeyExisted         = errors.New("key was existed")
+    errorKeyNotExisted      = errors.New("key was not existed")
+    errorTrieSearchFailed   = errors.New("search trie exception")
 )
 
 type node struct {
