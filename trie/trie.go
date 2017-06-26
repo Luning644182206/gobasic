@@ -19,6 +19,7 @@ var (
 
 type node struct {
     index       byte
+    father      *node
     children    map[byte]*node
     isEnd       bool
     value       interface{}
@@ -28,9 +29,10 @@ type Trie struct {
     root        *node
 }
 
-func newNode(index byte, value interface{}) (trieNode *node) {
+func newNode(father *node, index byte, value interface{}) (trieNode *node) {
     return &node{
         index:      index,
+        father:     father,
         children:   make(map[byte]*node),
         isEnd:      false,
         value:      value,
@@ -39,14 +41,13 @@ func newNode(index byte, value interface{}) (trieNode *node) {
 
 func NewTrie() (*Trie, error) {
     return &Trie{
-        root:   newNode(0, nil),
+        root:   newNode(nil, 0, nil),
     }, nil
 }
 
-func (t *Trie) search(key []byte, isNew bool) (fatherNode *node, lastNode *node, err error) {
+func (t *Trie) search(key []byte, isNew bool) (lastNode *node, err error) {
     size := len(key)
 
-    fatherNode = nil
     lastNode = t.root
     err = nil
 
@@ -55,22 +56,21 @@ func (t *Trie) search(key []byte, isNew bool) (fatherNode *node, lastNode *node,
         cnode, ok := lastNode.children[b]
         if !ok {
             if isNew {
-                cnode = newNode(b, nil)
+                cnode = newNode(lastNode, b, nil)
                 lastNode.children[b] = cnode
             } else {
-                return nil, nil, errorKeyNotExisted
+                return nil, errorKeyNotExisted
             }
         }
-        fatherNode = lastNode
         lastNode = cnode
     }
-    return fatherNode, lastNode, err
+    return lastNode, err
 }
 
 func (t *Trie) Insert(key []byte, value interface{}) (err error) {
     var lastNode *node = nil
 
-    _, lastNode, err = t.search(key, true)
+    lastNode, err = t.search(key, true)
     if err != nil {
         return err
     }
@@ -88,7 +88,7 @@ func (t *Trie) Insert(key []byte, value interface{}) (err error) {
 func (t *Trie) Update(key []byte, value interface{}) (err error) {
     var lastNode *node = nil
 
-    _, lastNode, err = t.search(key, false)
+    lastNode, err = t.search(key, false)
     if err != nil {
         return err
     }
@@ -104,7 +104,7 @@ func (t *Trie) Update(key []byte, value interface{}) (err error) {
 func (t *Trie) Find(key []byte) (value interface{}, err error) {
     var lastNode *node = nil
 
-    _, lastNode, err = t.search(key, false)
+    lastNode, err = t.search(key, false)
     if err != nil {
         return nil, err
     }
@@ -118,9 +118,8 @@ func (t *Trie) Find(key []byte) (value interface{}, err error) {
 
 func (t *Trie) Delete(key []byte) (err error) {
     var lastNode *node = nil
-    var fatherNode *node = nil
 
-    fatherNode, lastNode, err = t.search(key, false)
+    lastNode, err = t.search(key, false)
     if err != nil {
         return err
     }
@@ -129,12 +128,12 @@ func (t *Trie) Delete(key []byte) (err error) {
         return errorKeyNotExisted
     }
 
-    if fatherNode == nil && len(key) > 0{
-        return errorTrieSearchFailed
-    }
-
     lastNode.isEnd = false
     lastNode.value = nil
+
+    if len(lastNode.children) == 0 && lastNode.father != nil {
+        delete(lastNode.father.children, lastNode.index)
+    }
 
     return nil
 }
