@@ -44,28 +44,6 @@ func NewTrie() (t *Trie) {
     }
 }
 
-func (t *Trie) search(key []byte, isNew bool) (lastNode *node, err error) {
-    size := len(key)
-
-    lastNode = t.root
-    err = nil
-
-    for i := 0; i < size; i++ {
-        b := key[i]
-        cnode, ok := lastNode.children[b]
-        if !ok {
-            if isNew {
-                cnode = newNode(lastNode, b, nil)
-                lastNode.children[b] = cnode
-            } else {
-                return nil, errorKeyNotExisted
-            }
-        }
-        lastNode = cnode
-    }
-    return lastNode, err
-}
-
 func (t *Trie) Insert(key []byte, value interface{}) (err error) {
     var lastNode *node = nil
 
@@ -137,6 +115,20 @@ func (t *Trie) Delete(key []byte) (err error) {
     return nil
 }
 
+func (t *Trie) Keys() (keys [][]byte) {
+    buffer := make([]byte, 0, 1024)
+    pkeys := &keys
+    pbuffer := &buffer
+
+    if t.root.isEnd {
+        *pkeys = append(*pkeys, []byte{})
+    }
+    for _, next := range(t.root.children) {
+        t.dfs(next, 0, pbuffer, pkeys)
+    }
+    return keys
+}
+
 func (t *Trie) dfs(ptr *node, depth int, pbuffer *[]byte, pkeys *[][]byte) {
     if len(*pbuffer) > depth {
         (*pbuffer)[depth] = ptr.index
@@ -155,16 +147,25 @@ func (t *Trie) dfs(ptr *node, depth int, pbuffer *[]byte, pkeys *[][]byte) {
     }
 }
 
-func (t *Trie) Keys() (keys [][]byte) {
-    buffer := make([]byte, 0, 1024)
-    pkeys := &keys
-    pbuffer := &buffer
+func (t *Trie) search(key []byte, isNew bool) (lastNode *node, err error) {
+    size := len(key)
 
-    if t.root.isEnd {
-        *pkeys = append(*pkeys, []byte{})
+    lastNode = t.root
+    err = nil
+
+    for i := 0; i < size; i++ {
+        b := key[i]
+        cnode, ok := lastNode.children[b]
+        if !ok {
+            if isNew {
+                cnode = newNode(lastNode, b, nil)
+                lastNode.children[b] = cnode
+            } else {
+                return nil, errorKeyNotExisted
+            }
+        }
+        lastNode = cnode
     }
-    for _, next := range(t.root.children) {
-        t.dfs(next, 0, pbuffer, pkeys)
-    }
-    return keys
+    return lastNode, err
 }
+
