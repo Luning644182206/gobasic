@@ -36,12 +36,47 @@ func randomBytes(length int) []byte {
     return ret
 }
 
+func TestKeys(t *testing.T) {
+    optNums := 100000
+    dict := make(map[string][]byte)
+    mytrie := NewTrie()
+    for i := 0; i < optNums; i++ {
+        keyLen := rand.Intn(128)
+        key := randomBytes(keyLen)
+        dict[string(key)] = nil
+        // ignore the error of trie.Insert
+        mytrie.Insert(key, nil)
+    }
+    // insert empty key
+    emptyKey := make([]byte, 0)
+    mytrie.Insert(emptyKey, nil)
+    dict[string(emptyKey)] = nil
+
+    keys := mytrie.Keys()
+    for _, key := range keys {
+        skey := string(key)
+        _, ok := dict[skey]
+        if !ok {
+            t.Fatalf("'%s' was not inserted\n", skey)
+        }
+        delete(dict, skey)
+    }
+
+    if len(dict) > 0 {
+        for k, _ := range(dict) {
+            t.Logf("'%s' insert failed.\n", string(k))
+        }
+        t.Fatal("some keys was not insert succeed.\n")
+    }
+}
+
 func TestComperhensive(t *testing.T) {
     optNums := 100000
     keys := make([][]byte, 0)
     values := make([][]byte, 0)
     dict := make(map[string][]byte)
-    mytrie, err := NewTrie()
+    mytrie := NewTrie()
+    var err error
     for i := 0; i < optNums; i++ {
         opt := rand.Intn(4)
         if opt == 0 {
@@ -63,7 +98,6 @@ func TestComperhensive(t *testing.T) {
 
             if !ok {
                 dict[string(key)] = value
-                // t.Logf("insert key '%s'\n", string(key))
             }
         } else if opt == 1 {
         // Trie.Update
@@ -137,7 +171,6 @@ func TestComperhensive(t *testing.T) {
             }
             if ok {
                 delete(dict, string(key))
-                // t.Logf("delete key '%s'\n", string(key))
             }
         }
     }

@@ -7,14 +7,13 @@
 package trie
 
 import (
-    // "log"
     "errors"
 )
 
 var (
     errorKeyExisted         = errors.New("key was existed")
     errorKeyNotExisted      = errors.New("key was not existed")
-    errorTrieSearchFailed   = errors.New("search trie exception")
+    // errorTrieSearchFailed   = errors.New("search trie exception")
 )
 
 type node struct {
@@ -39,10 +38,10 @@ func newNode(father *node, index byte, value interface{}) (trieNode *node) {
     }
 }
 
-func NewTrie() (*Trie, error) {
+func NewTrie() (t *Trie) {
     return &Trie{
         root:   newNode(nil, 0, nil),
-    }, nil
+    }
 }
 
 func (t *Trie) search(key []byte, isNew bool) (lastNode *node, err error) {
@@ -136,4 +135,36 @@ func (t *Trie) Delete(key []byte) (err error) {
     }
 
     return nil
+}
+
+func (t *Trie) dfs(ptr *node, depth int, pbuffer *[]byte, pkeys *[][]byte) {
+    if len(*pbuffer) > depth {
+        (*pbuffer)[depth] = ptr.index
+    } else {
+        *pbuffer = append(*pbuffer, ptr.index)
+    }
+
+    if ptr.isEnd {
+        key := make([]byte, depth+1)
+        copy(key, (*pbuffer)[:depth+1])
+        *pkeys = append(*pkeys, key)
+    }
+
+    for _, next := range ptr.children {
+        t.dfs(next, depth+1, pbuffer, pkeys)
+    }
+}
+
+func (t *Trie) Keys() (keys [][]byte) {
+    buffer := make([]byte, 0, 1024)
+    pkeys := &keys
+    pbuffer := &buffer
+
+    if t.root.isEnd {
+        *pkeys = append(*pkeys, []byte{})
+    }
+    for _, next := range(t.root.children) {
+        t.dfs(next, 0, pbuffer, pkeys)
+    }
+    return keys
 }
